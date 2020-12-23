@@ -30,6 +30,8 @@ import android.widget.Toast;
 import com.pedro.encoder.input.video.Camera1ApiManager;
 import com.pedro.encoder.input.video.CameraOpenException;
 import com.pedro.rtplibrary.rtmp.RtmpCamera1;
+import com.tyorikan.voicerecordingvisualizer.RecordingSampler;
+import com.tyorikan.voicerecordingvisualizer.VisualizerView;
 
 import net.ossrs.rtmp.ConnectCheckerRtmp;
 
@@ -64,6 +66,7 @@ public class RTMPActivity extends CordovaActivity implements ConnectCheckerRtmp 
     private Activity activity;
     private File folder = null;
     private String _url = null;
+    private String _mode = null;
     private String _username = null;
     private String _password = null;
     private ImageButton ic_torch;
@@ -83,6 +86,8 @@ public class RTMPActivity extends CordovaActivity implements ConnectCheckerRtmp 
     private ListView list;
     private EditText txtComment;
     private ImageButton btnComment;
+
+    private VisualizerView visualizerView;
 
     private java.util.List<android.hardware.Camera.Size> resolutions;
     private int selectedWidth = 0;
@@ -131,7 +136,7 @@ public class RTMPActivity extends CordovaActivity implements ConnectCheckerRtmp 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activity = this.cordovaInterface.getActivity();
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(_getResource("rtsp_rtmp_streamer", "layout"));
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -145,12 +150,17 @@ public class RTMPActivity extends CordovaActivity implements ConnectCheckerRtmp 
 
         Intent intent = getIntent();
         _url = intent.getStringExtra("url");
+        _mode = intent.getStringExtra("mode");
         _username = intent.getStringExtra("username");
         _password = intent.getStringExtra("password");
 
         _UIListener();
         _commentContainer(false);
         _broadcastRCV();
+
+        camera1ApiManager.setRotation(90);
+
+        _toggleStreaming();
     }
 
     @Override
@@ -241,6 +251,27 @@ public class RTMPActivity extends CordovaActivity implements ConnectCheckerRtmp 
 
         ic_closed = findViewById(_getResource("ic_closed", "id"));
         ic_closed.setOnClickListener(v -> _closedActivity());
+
+        visualizerView = findViewById(_getResource("visualizer", "id"));
+
+        if(_mode != null && _mode.equals("audio")) {
+            surfaceView.setVisibility(View.GONE);
+            visualizerView.setVisibility(View.VISIBLE);
+
+            ic_torch.setVisibility(View.GONE);
+            ic_switch_camera.setVisibility(View.GONE);
+            ic_resolutions.setVisibility(View.GONE);
+            ic_record.setVisibility(View.GONE);
+
+        }else {
+            surfaceView.setVisibility(View.VISIBLE);
+            visualizerView.setVisibility(View.GONE);
+
+            ic_torch.setVisibility(View.VISIBLE);
+            ic_switch_camera.setVisibility(View.VISIBLE);
+            ic_resolutions.setVisibility(View.GONE);
+            ic_record.setVisibility(View.GONE);
+        }
     }
 
     private void _changeOrientation() {
@@ -288,11 +319,24 @@ public class RTMPActivity extends CordovaActivity implements ConnectCheckerRtmp 
         Log.d(TAG, "Res: " + _w + "x" + _h + " bitrate " + videoH.bitrate(_w, _h));
 
         if (rtmpCameral.prepareAudio() && rtmpCameral.prepareVideo(_w, _h, 30, videoH.bitrate(_w, _h),
-                false, 0)) {
+                false, 90)) {
             rtmpCameral.startStream(_url);
             _toggleBtnImgVideo(true);
 
             VideoStream.sendBroadCast(activity, "onStartStream");
+
+            RecordingSampler recordingSampler = new RecordingSampler();
+            recordingSampler.setVolumeListener(new RecordingSampler.CalculateVolumeListener() {
+                @Override
+                public void onCalculateVolume(int volume) {
+
+                }
+            });  // for custom implements
+            recordingSampler.setSamplingInterval(100); // voice sampling interval
+            recordingSampler.link(visualizerView);     // link to visualizer
+
+            recordingSampler.startRecording();
+
         } else {
             Toast.makeText(activity, "Error preparing stream, This device cant do it.", Toast.LENGTH_SHORT)
                     .show();
@@ -326,6 +370,8 @@ public class RTMPActivity extends CordovaActivity implements ConnectCheckerRtmp 
                 isFlashOn = false;
                 _toggleBtnImgFlash();
             }
+
+            finish();
         }
     }
 

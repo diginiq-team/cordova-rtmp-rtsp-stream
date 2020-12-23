@@ -129,6 +129,7 @@ public class VideoStream extends CordovaPlugin {
     private String[] permissions = {WRITE_EXTERNAL_STORAGE, CAMERA, RECORD_AUDIO, MODIFY_AUDIO_SETTINGS,
             READ_EXTERNAL_STORAGE, WAKE_LOCK};
     private String url;
+    private String mode;
     private String username;
     private String password;
     private String _action;
@@ -159,9 +160,10 @@ public class VideoStream extends CordovaPlugin {
 
         _args = args;
         url = args.getString(0);
-        if (args.length() == 3) {
-            username = args.getString(1);
-            password = args.getString(2);
+        mode = args.getString(1);
+        if (args.length() == 4) {
+            username = args.getString(2);
+            password = args.getString(3);
         }
 
         return this._methods(action, _args);
@@ -213,12 +215,12 @@ public class VideoStream extends CordovaPlugin {
 
                     return true;
                 case "streamRTMP":
-                    _startRTMP(url, null, null);
+                    _startRTMP(url, mode, null, null);
                     _plugResultsKeep();
 
                     return true;
                 case "streamRTMPAuth":
-                    _startRTMP(url, username, password);
+                    _startRTMP(url, mode, username, password);
                     _plugResultsKeep();
 
                     return true;
@@ -268,11 +270,12 @@ public class VideoStream extends CordovaPlugin {
         mActivity.startActivity(intent);
     }
 
-    private void _startRTMP(String uri, String username, String password) {
+    private void _startRTMP(String uri, String mode, String username, String password) {
         _broadcastRCV();
 
         Intent intent = new Intent(mActivity, RTMPActivity.class);
         intent.putExtra("url", uri);
+        intent.putExtra("mode", mode);
         intent.putExtra("username", username);
         intent.putExtra("password", password);
         mActivity.startActivity(intent);

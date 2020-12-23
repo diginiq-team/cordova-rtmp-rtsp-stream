@@ -23,14 +23,14 @@ videoStreamer.streamRTSPAuth = function(uri, username, password, success, failur
     );
 };
 
-videoStreamer.streamRTMP = function(uri, success, failure) {
+videoStreamer.streamRTMP = function(uri, mode, success, failure) {
     // fire
     exec(
         success,
         failure,
         'VideoStream',
         'streamRTMP',
-        [uri]
+        [uri, mode]
     );
 };
 

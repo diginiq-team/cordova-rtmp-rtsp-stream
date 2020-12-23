@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <FrameLayout
         android:id="@+id/cameraView"
@@ -9,11 +10,26 @@
         android:layout_height="match_parent"
         android:background="#0d0d0d">
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#000000"/>
+
         <SurfaceView
             android:id="@+id/rtmp_rtsp_stream_surfaceView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center" />
+
+        <com.tyorikan.voicerecordingvisualizer.VisualizerView
+            android:id="@+id/visualizer"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:background="@android:color/black"
+            android:layout_gravity="center_vertical"
+            app:renderColor="@android:color/white"
+            app:numColumns="200"
+            app:renderRange="both" />
 
     </FrameLayout>
 
